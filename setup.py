@@ -7,7 +7,7 @@ setup(
     author='Alexander Windmann and Henrik Steude',
     author_email='henrik.steude@gmail.com',
     url='https://github.com/hsteude/...',
-    packages=find_packages(include=['comm_agents']),
+    packages=find_packages(),
     install_requires=[
         'pandas',
         'numpy',
