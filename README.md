@@ -1,6 +1,6 @@
 # Concept Learning for CPS (Code for Paper)
 
-This repository contains the codes for the paper "LEARNING PHYSICAL CONCEPTS IN CPS: A CASE STUDY WITH A THREE-TANK SYSTEM". All experiments and the figures contained in the paper should be reproducible.
+This repository contains the code for the paper [Learning Physical Concepts in CPS: A Case Study with a Three-Tank System](https://arxiv.org/abs/2111.14151). All experiments and the figures contained in the paper should be reproducible.
 
 This repo is structured as follows:
 
