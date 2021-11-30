@@ -7,12 +7,12 @@ This repo is structured as follows:
 ```
 .
 ├── .gitignore                  
-├── README.md                   --> this fiel :)
+├── README.md                   --> this field :)
 ├── data                        --> dataset for all solutions
 ├── figures                     --> all paper figurers
 ├── setup.py                    --> for package installation
 ├── solution-1                  --> subfolder for solution
-│   ├── constaants.py           --> hyperparameters, constants, ...
+│   ├── constants.py            --> hyperparameters, constants, ...
 │   ├── datagen                 --> code for data generation
 │   ├── scripts                 --> scripts to run the experiment
 │   │   ├── create_figures.py
