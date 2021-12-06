@@ -29,7 +29,7 @@ This repo is structured as follows:
 ## Installation
 To install the required packages, run the following from the project root of this repo:
 ```sh
-conda create -n concep-learning-cps python=3.9
+conda create -n concept-learning-cps python=3.9
 conda activate concep-learning-cps
 pip install -e .
 ```

@@ -9,6 +9,7 @@ setup(
     url='https://github.com/hsteude/...',
     packages=find_packages(),
     install_requires=[
+        'scipy',
         'pandas',
         'numpy',
         'scipy',
@@ -19,6 +20,7 @@ setup(
         'tqdm',
         'scikit-learn',
         'plotly',
+        'fastparquet',
         'matplotlib',
         ],
 )
