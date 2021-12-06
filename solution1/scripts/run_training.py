@@ -27,7 +27,8 @@ HPARAMS = dict(
 
 def train():
     gpus = 1 if torch.cuda.is_available() else 0
-    logger = TensorBoardLogger(const.LOGDIR, name=const.MODEL_NAME, default_hp_metric=False)
+    logger = TensorBoardLogger(const.LOGDIR, name=const.MODEL_NAME,
+                               default_hp_metric=False)
     trainer = pl.Trainer(
         gpus=gpus,
         max_epochs=HPARAMS['max_epochs'],

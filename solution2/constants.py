@@ -15,6 +15,8 @@ KV12_MAX = 1
 KV23_MIN = .1
 KV23_MAX = 1
 SCALING_CONST = 100
+TANK_MAX_FILL = 100
+
 
 STATE_COL_NAMES = ['h1', 'h2', 'h3']
 TIME_COL_NAME = 'time'
@@ -24,12 +26,14 @@ KV12_COL_NAME = 'kv12'
 KV23_COL_NAME = 'kv23'
 LABEL_COLS = [Q1_COL_NAME, Q3_COL_NAME, KV12_COL_NAME, KV23_COL_NAME]
 UID_SAMPLE_COL_NAME = 'uid_ts_sample'
+A1_COLNAME = 'answer_1'
+A2_COLNAME = 'answer_2'
+A3_COLNAME = 'answer_3'
+A4_COLNAME = 'answer_4'
+ANSWER_COLS = [A1_COLNAME, A2_COLNAME, A3_COLNAME, A4_COLNAME]
 
-# Path
-DATA_PATH = 'data/solution_1_dataset.parquet'
-SEED = 12354
-
-FIGURE_PATH_TIME_SERIES = 'figures/solution_1_example_ts.pdf'
-FIGURE_PATH_RESULTS = 'figures/solution_1_results.pdf'
+DATA_PATH = 'data/solution_2_dataset.parquet'
+FIGURE_PATH_RESULTS = 'figures/solution_2_results.pdf'
 LOGDIR = "logs"
-MODEL_NAME = "SEQ2SEQ"
+MODEL_NAME = "COMM-AGENTS"
+SEED = 12354
