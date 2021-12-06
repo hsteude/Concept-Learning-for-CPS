@@ -1,7 +1,9 @@
 from solution1.seq2seq_vae.vae import VAE
+from pytorch_lightning.loggers import TensorBoardLogger
 from solution1.datagen.data_module import ThreeTankDataModule
 import torch
 import pytorch_lightning as pl
+import solution1.constants as const
 
 
 HPARAMS = dict(
@@ -25,9 +27,11 @@ HPARAMS = dict(
 
 def train():
     gpus = 1 if torch.cuda.is_available() else 0
+    logger = TensorBoardLogger(const.LOGDIR, name=const.MODEL_NAME, default_hp_metric=False)
     trainer = pl.Trainer(
         gpus=gpus,
-        max_epochs=10_000)
+        max_epochs=HPARAMS['max_epochs'],
+        logger=logger)
     vae = VAE(**HPARAMS)
     dm = ThreeTankDataModule(**HPARAMS)
     trainer.fit(vae, dm)

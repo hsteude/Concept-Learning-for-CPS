@@ -8,6 +8,7 @@ lightning_logs/*
 lightning_logs.backup/*
 data/*
 data/.gitkeep
+logs/*
 
 
 # Byte-compiled / optimized / DLL files

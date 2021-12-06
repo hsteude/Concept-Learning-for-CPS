@@ -30,4 +30,7 @@ DATA_PATH = 'data/solution_1_dataset.parquet'
 SEED = 12354
 
 FIGURE_PATH_TIME_SERIES = 'figures/solution_1_example_ts.pdf'
+LOGDIR = "logs"
+MODEL_NAME = "SEQ2SEQ"
+
 
