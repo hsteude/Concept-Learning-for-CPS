@@ -123,11 +123,11 @@ batch_size = 500
 dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=24)
 MODEL_VERSION = 'version_0'
 
-hparams_path = f'./lightning_logs/{MODEL_VERSION}/hparams.yaml'
+hparams_path = f'./{const.LOGDIR}/{const.MODEL_NAME}/{MODEL_VERSION}/hparams.yaml'
 with open(hparams_path, 'r') as stream:
         hparam_dct = yaml.safe_load(stream)
-ckpt_file_name = os.listdir(f'./lightning_logs/{MODEL_VERSION}/checkpoints/')[-1]
-ckpt_file_path = f'./lightning_logs/{MODEL_VERSION}/checkpoints/{ckpt_file_name}'
+ckpt_file_name = os.listdir(f'./{const.LOGDIR}/{const.MODEL_NAME}/{MODEL_VERSION}/checkpoints/')[-1]
+ckpt_file_path = f'./{const.LOGDIR}/{const.MODEL_NAME}/{MODEL_VERSION}/checkpoints/{ckpt_file_name}'
 model = VAE.load_from_checkpoint(ckpt_file_path)
 model
 
@@ -171,3 +171,4 @@ for j in range(len(df_real_params)):
 
 fig.update_layout(height=1000, width=1500, title_text="Latent neuron activations vs. hidden states", showlegend=False)
 
+pio.write_image(fig, const.FIGURE_PATH_RESULTS, width=1000, height=1500)
