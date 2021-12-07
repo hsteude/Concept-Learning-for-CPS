@@ -129,7 +129,6 @@ with open(hparams_path, 'r') as stream:
 ckpt_file_name = os.listdir(f'./{const.LOGDIR}/{const.MODEL_NAME}/{MODEL_VERSION}/checkpoints/')[-1]
 ckpt_file_path = f'./{const.LOGDIR}/{const.MODEL_NAME}/{MODEL_VERSION}/checkpoints/{ckpt_file_name}'
 model = VAE.load_from_checkpoint(ckpt_file_path)
-model
 
 
 batches = iter(dataloader)
@@ -149,26 +148,17 @@ for i, hs in enumerate(const.LABEL_COLS):
     for j, hs_pred in enumerate(df_latent_mu.columns):
         fig.add_trace(go.Scatter(y=df_latent_mu[hs_pred], x=df_real_params[hs], 
                             mode='markers', name=f'activation {hs_pred} over box_x',
-                                marker_color='#1f77b4'),
+                                marker_color='#1f77b4',
+                                 opacity=1,
+                                 marker=dict(size=3),
+                                ),
                      row=i+1, col=j+1)
         fig.update_yaxes(range=[-5, 5])
 
-# Update xaxis properties
-for i in range(hparam_dct['latent_dim']):
-    fig.update_xaxes(title_text=df_real_params.columns[0], row=1, col=i+1)
-    fig.update_xaxes(title_text=df_real_params.columns[1], row=2, col=i+1)
-    fig.update_xaxes(title_text=df_real_params.columns[2], row=3, col=i+1)
-    fig.update_xaxes(title_text=df_real_params.columns[3], row=4, col=i+1)
 
-# Update xaxis properties
-for j in range(len(df_real_params)):
-    fig.update_yaxes(title_text=df_latent_mu.columns[0], row=j+1, col=1)
-    fig.update_yaxes(title_text=df_latent_mu.columns[1], row=j+1, col=2)
-    fig.update_yaxes(title_text=df_latent_mu.columns[2], row=j+1, col=3)
-    fig.update_yaxes(title_text=df_latent_mu.columns[3], row=j+1, col=4)
-    fig.update_yaxes(title_text=df_latent_mu.columns[4], row=j+1, col=5)
-
-
-fig.update_layout(height=1000, width=1500, title_text="Latent neuron activations vs. hidden states", showlegend=False)
-
-pio.write_image(fig, const.FIGURE_PATH_RESULTS, width=1000, height=1500)
+fig.update_layout(title_text=r"Estimantd mean parameters in the latent space over true concepts", showlegend=False,
+                width =500, height=300, 
+                  font_family="Serif", font_size=11, 
+                  margin_l=5, margin_t=50, margin_b=5, margin_r=5,
+)
+pio.write_image(fig, const.FIGURE_PATH_RESULTS, width=500, height=300)
