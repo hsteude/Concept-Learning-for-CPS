@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 
 from torch.utils.data import DataLoader
-from dataset import ThreeTankStateDataset
+from solution4.datagen.dataset import ThreeTankStateDataset
 
 
 class ThreeTankStateDataModule(pl.LightningDataModule):

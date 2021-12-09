@@ -9,8 +9,8 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.io as pio
 
-import constants as const
-from models.som_vae.som_vae import SOMVAE
+import solution4.constants as const
+from solution4.som_vae.som_vae import SOMVAE
 
 
 def plot_simulation(y: np.array):

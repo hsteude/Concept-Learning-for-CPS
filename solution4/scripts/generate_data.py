@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import odeint
 
-from scripts.create_figures import plot_simulation
+from solution4.scripts.create_figures import plot_simulation
 
 
 class ThreeTankSimulation:
