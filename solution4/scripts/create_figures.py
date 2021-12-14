@@ -32,10 +32,31 @@ def plot_simulation(y: np.array):
     fig.show()
 
 
-def plot_state_prediction(model, start_idx=None, stop_idx=None, step=1, title=None, width=500, height=400):
+def _get_ckpt_path(logdir, model_name, version=0):
+    path = f"{logdir}/{model_name}/version_{version}/checkpoints/*.ckpt"
+    return glob.glob(path)[0]
+
+
+def _get_hparams(logdir, model_name, version=0):
+    path = f"{logdir}/{model_name}/version_{version}/hparams.yaml"
+    with open(path, "r") as file:
+        hparams = yaml.safe_load(file)
+    return hparams
+
+
+def load_model(logdir=const.LOGDIR, model_name=const.MODEL_NAME, version=const.MODEL_VERSION):
+    ckpt_path = _get_ckpt_path(logdir, model_name, version)
+    hparams = _get_hparams(logdir, model_name, version)
+    return SOMVAE.load_from_checkpoint(ckpt_path, **hparams)
+
+
+def plot_state_prediction(model=None, start_idx=None, stop_idx=None, step=1,
+                          title="Fill levels with predicted state", width=500, height=400):
     """Plots section of datagen with a prediction of the underlying state."""
     # load datagen
     df = pd.read_csv("../../data/solution_4_dataset.csv")
+    if model is None:
+        model = load_model()
 
     # default: plot section of test datagen
     if start_idx is None:
@@ -43,7 +64,6 @@ def plot_state_prediction(model, start_idx=None, stop_idx=None, step=1, title=No
     if stop_idx is None:
         stop_idx = 2550
     df = df[start_idx:stop_idx]
-
 
     # get state prediction
     states = pd.DataFrame(index=df.index)
@@ -84,23 +104,5 @@ def plot_state_prediction(model, start_idx=None, stop_idx=None, step=1, title=No
     fig.show()
 
 
-def _get_ckpt_path(logdir, model_name, version=0):
-    path = f"{logdir}/{model_name}/version_{version}/checkpoints/*.ckpt"
-    return glob.glob(path)[0]
-
-
-def _get_hparams(logdir, model_name, version=0):
-    path = f"{logdir}/{model_name}/version_{version}/hparams.yaml"
-    with open(path, "r") as file:
-        hparams = yaml.safe_load(file)
-    return hparams
-
-
-def load_model(logdir=const.LOGDIR, model_name=const.MODEL_NAME, version=const.MODEL_VERSION):
-    ckpt_path = _get_ckpt_path(logdir, model_name, version)
-    hparams = _get_hparams(logdir, model_name, version)
-    return SOMVAE.load_from_checkpoint(ckpt_path, **hparams)
-
-
 if __name__ == '__main__':
-    plot_state_prediction(load_model(), title="Fill levels with predicted state")
+    plot_state_prediction()
