@@ -8,12 +8,31 @@ from solution4.som_vae.ffn import LinearDecoder, LinearEncoder
 
 
 class SOMVAE(pl.LightningModule):
-    def __init__(self, d_input=100, d_channel=3, d_enc_dec=100,
-                 d_latent=64, d_som=None,
-                 alpha=1, beta=1, gamma=1, tau=1,
-                 lr=1e-3):
+    """SOM-VAE
+    Model by Fortuin et al. (2019): https://arxiv.org/abs/1806.02199
+    The official code in tensorflow: https://github.com/ratschlab/SOM-VAE
+    Args:
+        d_input: input dimension or sequence length
+        d_channel: number of channels or sensors
+        d_enc_dec: hidden dimension in encoder and decoder
+        d_latent: dimension of encodings and embeddings
+        d_som: dimension of the SOM as a list of two integers
+        alpha: factor of the commitment loss
+        beta: factor of the SOM loss
+    """
+    def __init__(self,
+                 d_input: int = 100,
+                 d_channel: int = 3,
+                 d_enc_dec: int = 100,
+                 d_latent: int = 64,
+                 d_som: list[int] = None,
+                 alpha: float = 1,
+                 beta: float = 1,
+                 lr: float = 1e-3
+                 ):
         super().__init__()
         self.save_hyperparameters()  # stores hyperparameters in self.hparams and allows logging
+
         self.d_som = d_som if d_som is not None else [3, 3]
         self.d_latent = d_latent
 
@@ -27,8 +46,6 @@ class SOMVAE(pl.LightningModule):
         self.embeddings = nn.Parameter(nn.init.trunc_normal_(torch.empty((d_som[0], d_som[1], d_latent)),
                                                              std=0.05, a=-0.1, b=0.1))
         self.mse_loss = nn.MSELoss()
-
-        self.automatic_optimization = True
 
     def forward(self, x):
         with torch.no_grad():

@@ -4,19 +4,40 @@ import pytorch_lightning as pl
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from ffn import LinearDecoder, LinearEncoder
+from solution4.som_vae.ffn import LinearDecoder, LinearEncoder
 
 
 class SOMVAETransition(pl.LightningModule):
     """SOM-VAE with transition model.
-    For the transition model to learn, the samples have to be loaded in order.
+    Model by Fortuin et al. (2019): https://arxiv.org/abs/1806.02199
+    The official code in tensorflow: https://github.com/ratschlab/SOM-VAE
+    Note that for the transition model to learn, the samples have to be loaded in order.
+    Args:
+        d_input: input dimension or sequence length
+        d_channel: number of channels or sensors
+        d_enc_dec: hidden dimension in encoder and decoder
+        d_latent: dimension of encodings and embeddings
+        d_som: dimension of the SOM as a list of two integers
+        alpha: factor of the commitment loss
+        beta: factor of the SOM loss
+        gamma: factor of the transition loss
+        tau: factor of the smoothness loss
     """
-    def __init__(self, d_input=100, d_channel=3, d_enc_dec=100,
-                 d_latent=64, d_som=None,
-                 alpha=1, beta=1, gamma=1, tau=1,
-                 lr=1e-3):
+    def __init__(self,
+                 d_input: int = 100,
+                 d_channel: int = 3,
+                 d_enc_dec: int = 100,
+                 d_latent: int = 64,
+                 d_som: list[int] = None,
+                 alpha: float = 1,
+                 beta: float = 1,
+                 gamma: float = 1,
+                 tau: float = 1,
+                 lr: float = 1e-3
+                 ):
         super().__init__()
         self.save_hyperparameters()  # stores hyperparameters in self.hparams and allows logging
+
         self.d_som = d_som if d_som is not None else [3, 3]
         self.d_latent = d_latent
 
@@ -30,9 +51,7 @@ class SOMVAETransition(pl.LightningModule):
         self.embeddings = nn.Parameter(nn.init.trunc_normal_(torch.empty((d_som[0], d_som[1], d_latent)),
                                                              std=0.05, a=-0.1, b=0.1))
         self.mse_loss = nn.MSELoss()
-        self.probs = self._transition_probabilities()
-
-        self.automatic_optimization = True
+        self.probs = self._init_transition_probabilities()
 
     def forward(self, x):
         with torch.no_grad():
@@ -53,21 +72,49 @@ class SOMVAETransition(pl.LightningModule):
         loss, raw_loss, prob_loss = self.loss(x, x_e, x_q, z_e, z_q, z_q_neighbors, k, z_dist)
         return loss, raw_loss, prob_loss
 
-    def _transition_probabilities(self):
+    def training_step(self, batch, batch_id):
+        loss, raw_loss, prob_loss = self._shared_step(batch)
+
+        self.log("train_loss", loss)
+        self.log("train_loss_raw", raw_loss)
+        self.log("train_prob_loss", prob_loss)
+        return loss
+
+    # def on_train_end(self):
+    def on_train_epoch_end(self, unused=None) -> None:
+        """normalizes transition matrix
+        Thus, transition matrix still contains valid transition probabilities.
+        """
+        probs_pos = torch.exp(self.probs)
+        probs_sum = torch.sum(probs_pos, dim=[-1, -2], keepdim=True)
+        self.probs = nn.Parameter(probs_pos / probs_sum)
+
+    def validation_step(self, batch, batch_id):
+        loss, raw_loss, prob_loss = self._shared_step(batch)
+        self.log("val_loss", loss)
+        self.log("val_loss_raw", raw_loss)
+        return raw_loss
+
+    def validation_epoch_end(self, outputs):
+        # log hparams with val_loss as reference
+        if self.logger:
+            self.logger.log_hyperparams(self.hparams, {"hp/val_loss_raw": torch.min(torch.stack(outputs))})
+
+    def test_step(self, batch, batch_id):
+        loss, raw_loss, prob_loss = self._shared_step(batch)
+        self.log("test_loss", loss)
+        self.log("test_loss_raw", raw_loss)
+
+    def configure_optimizers(self):
+        optimizer_model = Adam(self.parameters(), lr=self.hparams.lr)
+        scheduler = ReduceLROnPlateau(optimizer_model, factor=0.5, patience=10, min_lr=1e-5)
+        return [optimizer_model], [{"scheduler": scheduler, "interval": "epoch", "monitor": "train_loss"}]
+
+    def _init_transition_probabilities(self):
         probs_raw = torch.zeros(*(self.d_som + self.d_som))
         probs_pos = torch.exp(probs_raw)
         probs_sum = torch.sum(probs_pos, dim=[-1, -2], keepdim=True)
         return nn.Parameter(probs_pos / probs_sum)
-
-    def _find_closest_embedding(self, z_e, batch_size=32):
-        """Picks the closest embedding for every encoding."""
-        z_dist = (z_e.unsqueeze(1).unsqueeze(2) - self.embeddings.unsqueeze(0)) ** 2
-        z_dist_sum = torch.sum(z_dist, dim=-1)
-        z_dist_flat = z_dist_sum.view(batch_size, -1)
-        k = torch.argmin(z_dist_flat, dim=-1)
-        k_1, k_2 = self._get_coordinates_from_idx(k)
-        k_batch = torch.stack([k_1, k_2], dim=1)
-        return self._gather_nd(self.embeddings, k_batch), z_dist_flat, k
 
     def _get_coordinates_from_idx(self, k):
         k_1 = torch.div(k, self.d_som[1], rounding_mode='floor')
@@ -104,6 +151,26 @@ class SOMVAETransition(pl.LightningModule):
         z_q_left[k2_not_left == 1] = z_q_left_[k2_not_left == 1]
 
         return torch.stack([z_q, z_q_up, z_q_down, z_q_right, z_q_left], dim=1)
+
+    @staticmethod
+    def _gather_nd(params, idx):
+        """Similar to tf.gather_nd. Here: returns batch of params given the indices."""
+        idx = idx.long()
+        outputs = []
+        for i in range(len(idx)):
+            outputs.append(params[[idx[i][j] for j in range(idx.shape[1])]])
+        outputs = torch.stack(outputs)
+        return outputs
+
+    def _find_closest_embedding(self, z_e, batch_size=32):
+        """Picks the closest embedding for every encoding."""
+        z_dist = (z_e.unsqueeze(1).unsqueeze(2) - self.embeddings.unsqueeze(0)) ** 2
+        z_dist_sum = torch.sum(z_dist, dim=-1)
+        z_dist_flat = z_dist_sum.view(batch_size, -1)
+        k = torch.argmin(z_dist_flat, dim=-1)
+        k_1, k_2 = self._get_coordinates_from_idx(k)
+        k_batch = torch.stack([k_1, k_2], dim=1)
+        return self._gather_nd(self.embeddings, k_batch), z_dist_flat, k
 
     def _loss_reconstruct(self, x, x_e, x_q):
         l_e = self.mse_loss(x, x_e)
@@ -153,52 +220,3 @@ class SOMVAETransition(pl.LightningModule):
             + self.hparams.gamma * prob_l + self.hparams.tau * prob_z_l  # 2x gamma similar to original repository
         raw_loss = mse_l + commit_l + som_l + prob_l + prob_z_l
         return loss, raw_loss, prob_l
-
-    @staticmethod
-    def _gather_nd(params, idx):
-        """Similar to tf.gather_nd. Here: returns batch of params given the indices."""
-        idx = idx.long()
-        outputs = []
-        for i in range(len(idx)):
-            outputs.append(params[[idx[i][j] for j in range(idx.shape[1])]])
-        outputs = torch.stack(outputs)
-        return outputs
-
-    def training_step(self, batch, batch_id):
-        loss, raw_loss, prob_loss = self._shared_step(batch)
-
-        self.log("train_loss", loss)
-        self.log("train_loss_raw", raw_loss)
-        self.log("train_prob_loss", prob_loss)
-        return loss
-
-    # def on_train_end(self):
-    def on_train_epoch_end(self, unused=None) -> None:
-        """normalizes transition matrix
-        Thus, transition matrix still contains transition probabilities.
-        """
-        if self.with_transition:
-            probs_pos = torch.exp(self.probs)
-            probs_sum = torch.sum(probs_pos, dim=[-1, -2], keepdim=True)
-            self.probs = nn.Parameter(probs_pos / probs_sum)
-
-    def validation_step(self, batch, batch_id):
-        loss, raw_loss, prob_loss = self._shared_step(batch)
-        self.log("val_loss", loss)
-        self.log("val_loss_raw", raw_loss)
-        return raw_loss
-
-    def validation_epoch_end(self, outputs):
-        # log hparams with val_loss as reference
-        if self.logger:
-            self.logger.log_hyperparams(self.hparams, {"hp/val_loss_raw": torch.min(torch.stack(outputs))})
-
-    def test_step(self, batch, batch_id):
-        loss, raw_loss, prob_loss = self._shared_step(batch)
-        self.log("test_loss", loss)
-        self.log("test_loss_raw", raw_loss)
-
-    def configure_optimizers(self):
-        optimizer_model = Adam(self.parameters(), lr=self.hparams.lr)
-        scheduler = ReduceLROnPlateau(optimizer_model, factor=0.5, patience=10, min_lr=1e-5)
-        return [optimizer_model], [{"scheduler": scheduler, "interval": "epoch", "monitor": "train_loss"}]
