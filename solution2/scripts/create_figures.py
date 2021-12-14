@@ -1,4 +1,5 @@
 from solution2.datagen.dataset import ThreeTankDataSet
+import plotly.io as pio
 import solution2.constants as const
 from torch.utils.data import DataLoader
 from solution2.comm_agents.lightning_module import LitModule
@@ -15,7 +16,7 @@ dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=24)
 
 
 # MODEL_VERSION = 'freq_and_phase'
-MODEL_VERSION = 'version_0'
+MODEL_VERSION = 'version_1'
 hparams_path = f'./{const.LOGDIR}/{const.MODEL_NAME}/{MODEL_VERSION}/hparams.yaml'
 with open(hparams_path, 'r') as stream:
         hparam_dct = yaml.safe_load(stream)
@@ -59,5 +60,4 @@ fig.update_layout(title_text=r"Latent space activation over true concepts",
 )
 
 
-import plotly.io as pio
 pio.write_image(fig, const.FIGURE_PATH_RESULTS, width=500, height=300)
