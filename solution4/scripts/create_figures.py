@@ -80,7 +80,7 @@ def plot_state_prediction(model, start_idx=None, stop_idx=None, step=1, title=No
     if title is not None:
         fig.update_layout(title=title)
 
-    pio.write_image(fig, f"../visualizations/figures/state-plot.pdf", width=width, height=height)
+    pio.write_image(fig, f"../../figures/solution_4_plot.pdf", width=width, height=height)
     fig.show()
 
 
