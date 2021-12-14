@@ -96,12 +96,11 @@ def _get_hparams(logdir, model_name, version=0):
     return hparams
 
 
-def load_model(logdir, model_name, version=0):
+def load_model(logdir=const.LOGDIR, model_name=const.MODEL_NAME, version=const.MODEL_VERSION):
     ckpt_path = _get_ckpt_path(logdir, model_name, version)
     hparams = _get_hparams(logdir, model_name, version)
     return SOMVAE.load_from_checkpoint(ckpt_path, **hparams)
 
 
 if __name__ == '__main__':
-    plot_state_prediction(load_model(const.LOGDIR, const.MODEL_NAME),
-                          title="Fill levels with predicted state")
+    plot_state_prediction(load_model(), title="Fill levels with predicted state")
