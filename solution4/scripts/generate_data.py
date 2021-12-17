@@ -101,7 +101,7 @@ class ThreeTankSimulation:
             sd_kv (float): if set, white noise with this standard deviation is added to the valve coefficients
             sd_dur (float): if set, white noise with this standard deviation is added to the duration
             leaky (bool): if true, add noise on closed valves and stopped inflow
-            export_path (str): if set, save simulation datagen at export path
+            export_path (str): if set, save simulation data at export path
         """
         seq_denoised, seq = self._configuration_seq(cycle, nb_of_cycles, sd_q, sd_kv, sd_dur, leaky)
 
