@@ -11,7 +11,7 @@ This repo is structured as follows:
 ├── data                        --> dataset for all solutions
 ├── figures                     --> all paper figurers
 ├── setup.py                    --> for package installation
-├── solution-1                  --> subfolder for solution
+├── solution1                   --> subfolder for solution
 │   ├── constants.py            --> hyperparameters, constants, ...
 │   ├── datagen                 --> code for data generation
 │   ├── scripts                 --> scripts to run the experiment
@@ -20,7 +20,7 @@ This repo is structured as follows:
 │   │   └── run_training.py
 │   └── seq2seq-vae             --> model code
 │       └── ...
-├─ solution-2
+├─ solution2
 │   └── ...
 ...
 
@@ -43,9 +43,9 @@ Each of the solutions has its own subdirectory in this repo and consists of thre
 The following commands will run those steps for solution 1. The other experiment can be reproduced accordingly.
 From the project root and with the new environment activated:
 ```
-ipython solution-1/scripts/generate_data.py
-ipython solution-1/scripts/run_training.py
-ipython solution-1/scripts/create_figures.py
+ipython solution1/scripts/generate_data.py
+ipython solution1/scripts/run_training.py
+ipython solution1/scripts/create_figures.py
 ```
 
 
