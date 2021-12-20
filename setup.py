@@ -22,5 +22,6 @@ setup(
         'plotly',
         'fastparquet',
         'matplotlib',
+        'kaleido'
         ],
 )
