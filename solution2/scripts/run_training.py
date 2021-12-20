@@ -23,7 +23,7 @@ def train():
         dec_num_hidden_layers=3,
         dec_out_dim=1,
         batch_size=32,
-        dl_num_workers=24,
+        dl_num_workers=8,
         validation_split=0.05,
         learning_rate=1e-4,
         beta=0.001,
